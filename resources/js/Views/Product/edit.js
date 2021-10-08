@@ -10,7 +10,6 @@ import axios from "axios";
 import ImageUploader from 'react-images-upload';
 import CKEditor from 'ckeditor4-react';
 import swal from 'sweetalert';
-import uuid from 'react-uuid';
 
 const Edit = (props) => {
     const { params } = props.match;
@@ -19,8 +18,8 @@ const Edit = (props) => {
     const [property, setProperty] = useState([]);
     const [product, setProduct] = useState({});
     const [loading, setLoading] = useState(true);
-    const [newImages,setNewImages] = useState([]);
-    const [defaultImages,setDefaultImages] = useState([]);
+    const [newImages, setNewImages] = useState([]);
+    const [defaultImages, setDefaultImages] = useState([]);
 
     useEffect(() => {
         axios.get(`/api/product/${params.id}/edit`,{
@@ -162,8 +161,6 @@ const Edit = (props) => {
                                             withPreview={true}
                                             singleImage={true}
                                         />
-                                        <br/>
-                                        <img src={[images.image_path]} width="100px" alt="image"/>
                                     </div>
                                 </div>
                                 <div className="row mb-2">
