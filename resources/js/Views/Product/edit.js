@@ -19,7 +19,8 @@ const Edit = (props) => {
     const [property, setProperty] = useState([]);
     const [product, setProduct] = useState({});
     const [loading, setLoading] = useState(true);
-    const [newImages, setNewImages] = useState([]);
+    const [newImages,setNewImages] = useState([]);
+    const [defaultImages,setDefaultImages] = useState([]);
 
     useEffect(() => {
         axios.get(`/api/product/${params.id}/edit`,{
@@ -32,6 +33,9 @@ const Edit = (props) => {
                 setCategories(res.data.categories);
                 setImages(res.data.product.images);
                 setProperty(res.data.product.properties);
+                res.data.product.images.filter(x => !x.isRemove ).map((item) => {
+                    defaultImages.push(item.image_path)
+                });
                 setLoading(false);
             } else {
                 swal('Xeta bas verdi!');
@@ -42,9 +46,9 @@ const Edit = (props) => {
     const handleSubmit = (values) => {
         const data = new FormData();
         newImages.forEach((image_file) => {
-            data.append('newImg', image_file);
+            data.append('newImg[]', image_file);
         });
-        data.append('img', images.image_path);
+        data.append('img', JSON.stringify(images));
         data.append('category_id', values.category_id);
         data.append('name', values.name);
         data.append('barcode', values.barcode);
@@ -84,6 +88,22 @@ const Edit = (props) => {
     const changeTextInput = (event, index) => {
         property[index][event.target.name] = event.target.value;
         setProperty([...property]);
+    };
+
+    const onChange = (picturesImage, pictures) => {
+        if (picturesImage.length > 0) {
+            setNewImages(newImages.concat(picturesImage))
+        }
+        const diffrence = defaultImages.filter(x => !pictures.includes(x));
+        diffrence.map((item) => {
+            const findIndex = defaultImages.findIndex((picture) => picture === item);
+            if (findIndex !== -1) {
+                const findIndexImage = images.findIndex((image) => image.image_path === item);
+                console.log(findIndexImage);
+                images[findIndexImage]['isRemove'] = true;
+                setImages([...images]);
+            }
+        });
     };
 
     if (loading) return <div>Yuklenir...</div>;
@@ -136,7 +156,7 @@ const Edit = (props) => {
                                         <ImageUploader
                                             withIcon={true}
                                             buttonText='Choose images'
-                                            onChange={(picturesFile) => {setNewImages(newImages.concat(picturesFile))}}
+                                            onChange={(picturesFiles,pictures) => onChange(picturesFiles,pictures)}
                                             imgExtension={['.jpg', '.gif', '.png', '.gif']}
                                             maxFileSize={5242880}
                                             withPreview={true}
