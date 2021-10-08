@@ -11094,6 +11094,11 @@ var Edit = function Edit(props) {
       newImages = _useState12[0],
       setNewImages = _useState12[1];
 
+  var _useState13 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]),
+      _useState14 = _slicedToArray(_useState13, 2),
+      defaultImages = _useState14[0],
+      setDefaultImages = _useState14[1];
+
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
     axios__WEBPACK_IMPORTED_MODULE_5___default().get("/api/product/".concat(params.id, "/edit"), {
       headers: {
@@ -11105,6 +11110,11 @@ var Edit = function Edit(props) {
         setCategories(res.data.categories);
         setImages(res.data.product.images);
         setProperty(res.data.product.properties);
+        res.data.product.images.filter(function (x) {
+          return !x.isRemove;
+        }).map(function (item) {
+          defaultImages.push(item.image_path);
+        });
         setLoading(false);
       } else {
         sweetalert__WEBPACK_IMPORTED_MODULE_8___default()('Xeta bas verdi!');
@@ -11117,9 +11127,9 @@ var Edit = function Edit(props) {
   var handleSubmit = function handleSubmit(values) {
     var data = new FormData();
     newImages.forEach(function (image_file) {
-      data.append('newImg', image_file);
+      data.append('newImg[]', image_file);
     });
-    data.append('img', images.image_path);
+    data.append('img', JSON.stringify(images));
     data.append('category_id', values.category_id);
     data.append('name', values.name);
     data.append('barcode', values.barcode);
@@ -11164,6 +11174,30 @@ var Edit = function Edit(props) {
   var changeTextInput = function changeTextInput(event, index) {
     property[index][event.target.name] = event.target.value;
     setProperty(_toConsumableArray(property));
+  };
+
+  var _onChange = function onChange(picturesImage, pictures) {
+    if (picturesImage.length > 0) {
+      setNewImages(newImages.concat(picturesImage));
+    }
+
+    var diffrence = defaultImages.filter(function (x) {
+      return !pictures.includes(x);
+    });
+    diffrence.map(function (item) {
+      var findIndex = defaultImages.findIndex(function (picture) {
+        return picture === item;
+      });
+
+      if (findIndex !== -1) {
+        var findIndexImage = images.findIndex(function (image) {
+          return image.image_path === item;
+        });
+        console.log(findIndexImage);
+        images[findIndexImage]['isRemove'] = true;
+        setImages(_toConsumableArray(images));
+      }
+    });
   };
 
   if (loading) return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)("div", {
@@ -11214,8 +11248,8 @@ var Edit = function Edit(props) {
                   children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_10__.jsx)(react_images_upload__WEBPACK_IMPORTED_MODULE_6__["default"], {
                     withIcon: true,
                     buttonText: "Choose images",
-                    onChange: function onChange(picturesFile) {
-                      setNewImages(newImages.concat(picturesFile));
+                    onChange: function onChange(picturesFiles, pictures) {
+                      return _onChange(picturesFiles, pictures);
                     },
                     imgExtension: ['.jpg', '.gif', '.png', '.gif'],
                     maxFileSize: 5242880,
