@@ -16,13 +16,18 @@ class AuthController extends Controller
             'email' => 'required|string|email|unique:users',
             'password' => 'required|string|confirmed'
         ]);
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => md5($request->password)
+        $user = new User([
+            'name'=>$request->name,
+            'email'=>$request->email,
+            'password'=>md5($request->password)
         ]);
+        $user = $user->save();
         $credentials = ['email' => $request->email, 'password' => $request->password];
-        if (!Auth::attempt($credentials)) { return response()->json(['message' => 'Bilgiləri doğru girin!'], 401); }
+        if (!Auth::attempt($credentials)) {
+			return response()->json([
+				'message' => 'Bilgiləri doğru girin!
+			'], 401);
+		}
         $user = $request->user();
         $tokenResult = $user->createToken('Personal Access');
         $token = $tokenResult->token;
@@ -46,12 +51,18 @@ class AuthController extends Controller
             'password' => 'required|string',
             'remember_me'=>'boolean'
         ]);
-        $credentials = request(['email', 'password']);
-        if (!Auth::attempt($credentials)) { return response()->json(['message' => 'İstifadəçi Adı və ya Şifrə yanlışdır!'], 401); }
+        $credentials = request(['email','password']);
+        if (!Auth::attempt($credentials)) {
+			return response()->json([
+				'message' => 'İstifadəçi Adı və ya Şifrə yanlışdır!
+			'], 401);
+		}
         $user = $request->user();
         $tokenResult = $user->createToken('Personal Access Token');
         $token = $tokenResult->token;
-        if ($request->remember_me) { $token->expires_at = Carbon::now()->addWeek(); }
+        if ($request->remember_me) {
+			$token->expires_at = Carbon::now()->addWeek();
+		}
         $token->save();
         return response()->json([
             'success' => true,

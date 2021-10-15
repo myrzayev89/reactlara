@@ -8,7 +8,6 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductProperty;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -20,7 +19,7 @@ class ProductController extends Controller
     public function index()
     {
         $user = request()->user();
-        $product = Product::orderBy('id', 'desc')->get();
+        $product = Product::where('user_id', $user->id)->orderBy('id', 'desc')->get();
         return response()->json(['success' => true, 'user' => $user, 'product' => $product]);
     }
 
@@ -33,10 +32,7 @@ class ProductController extends Controller
     {
         $user = request()->user();
         $categories = Category::where('user_id', $user->id)->orderBy('id', 'desc')->get();
-        return response()->json([
-            'success' => true,
-            'categories' => $categories
-        ]);
+        return response()->json(['success' => true, 'categories' => $categories]);
     }
 
     /**
@@ -55,12 +51,16 @@ class ProductController extends Controller
         $all['user_id'] = $user->id;
         $create = Product::create($all);
         if ($create) {
-            $upload = Product::imageUploader($request);
-            if ($request->img) {
-                ProductImage::create([
-                    'product_id' => $create->id,
-                    'image_path' => $upload
-                ]);
+            if ($request->hasFile('img')) {
+                foreach ($request->file('img') as $item) {
+                    $folder = date('Y-m-d');
+                    $name = $folder.'/'.time().rand(1, 100).'.'.$item->extension();
+                    $item->move(public_path("uploads/$folder"), $name);
+                    ProductImage::create([
+                        'product_id' => $create->id,
+                        'image_path' => $name
+                    ]);
+                }
             }
             foreach ($properties as $property) {
                 ProductProperty::create([
@@ -69,27 +69,10 @@ class ProductController extends Controller
                     'value' => $property['value']
                 ]);
             }
-            return response()->json([
-                'success' => true,
-                'message' => 'Mal əlavə edildi'
-            ]);
+            return response()->json(['success' => true, 'message' => 'Mal əlavə edildi']);
         } else {
-            return response()->json([
-                'success' => false,
-                'message' => 'Xəta baş vredi!'
-            ]);
+            return response()->json(['success' => false, 'message' => 'Xəta baş vredi!']);
         }
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
     }
 
     /**
@@ -121,15 +104,34 @@ class ProductController extends Controller
     {
         $all = $request->all();
         $properties = (isset($all['property'])) ? json_decode($all['property'], true) : [];
-        if ($request->hasFile('newImg')) {
-            $upload = Product::imageUploader($request, $all['img']);
-            ProductImage::where('product_id', $id)->update([
-                'product_id' => $id,
-                'image_path' => $upload
-            ]);
+        $file = (isset($all['img'])) ? json_decode($all['img'],true) : [];
+        foreach ($file as $img) {
+            if (isset($img['isRemove'])) {
+                try {
+                    $len = strlen(env('IMAGE_URL'));
+                    $new_path = substr($img['image_path'], $len, strlen($img['image_path'])-$len);
+                    unlink("uploads/$new_path");
+                }
+                catch(\Exception $e){
+                    $e->getMessage();
+                }
+                ProductImage::where('id', $img['id'])->delete();
+            }
         }
+        if ($request->hasFile('newImg')) {
+            foreach ($request->file('newImg') as $item) {
+                $folder = date('Y-m-d');
+                $name = $folder.'/'.time().rand(1, 100).'.'.$item->extension();
+                $item->move(public_path("uploads/$folder"), $name);
+                ProductImage::create([
+                    'product_id' => $id,
+                    'image_path' => $name
+                ]);
+            }
+        }
+        ProductProperty::where('product_id', $id)->delete();
         foreach ($properties as $property) {
-            ProductProperty::where('product_id', $id)->update([
+            ProductProperty::create([
                 'product_id' => $id,
                 'property' => $property['property'],
                 'value' => $property['value']
@@ -141,15 +143,9 @@ class ProductController extends Controller
         unset($all['_method']);
         $update = Product::where('id', $id)->update($all);
         if ($update) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Mal redaktə edildi'
-            ]);
+            return response()->json(['success' => true, 'message' => 'Mal redaktə edildi']);
         } else {
-            return response()->json([
-                'success' => false,
-                'message' => 'Xəta baş vredi!'
-            ]);
+            return response()->json(['success' => false, 'message' => 'Xəta baş vredi!']);
         }
     }
 
@@ -162,19 +158,22 @@ class ProductController extends Controller
     public function destroy($id)
     {
         $product = Product::find($id);
-        $images = $product->productImages;
-        if ($images) {
-            Storage::delete($images->image_path);
-            $product->productImages()->delete();
+        if ($product->images) {
+            try {
+                foreach ($product->images as $img) {
+                    $len = strlen(env('IMAGE_URL'));
+                    $new_path = substr($img['image_path'], $len, strlen($img['image_path'])-$len);
+                    unlink("uploads/$new_path");
+                }
+            } catch (\Exception $e) {
+                $e->getMessage();
+            }
+            $product->images()->delete();
         }
-        $property = $product->productProperties;
-        if ($property) {
-            $product->productProperties()->delete();
+        if ($product->properties) {
+            $product->properties()->delete();
         }
         $product->delete();
-        return response()->json([
-            'success' => true,
-            'message' => 'Mal Silindi'
-        ]);
+        return response()->json(['success' => true, 'message' => 'Mal Silindi']);
     }
 }

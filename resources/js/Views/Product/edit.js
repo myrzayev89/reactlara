@@ -10,6 +10,7 @@ import axios from "axios";
 import ImageUploader from 'react-images-upload';
 import CKEditor from 'ckeditor4-react';
 import swal from 'sweetalert';
+import Loader from "react-loader-spinner";
 
 const Edit = (props) => {
     const { params } = props.match;
@@ -32,7 +33,7 @@ const Edit = (props) => {
                 setCategories(res.data.categories);
                 setImages(res.data.product.images);
                 setProperty(res.data.product.properties);
-                res.data.product.images.filter(x => !x.isRemove ).map((item) => {
+                res.data.product.images.filter(x => !x.isRemove).map((item) => {
                     defaultImages.push(item.image_path)
                 });
                 setLoading(false);
@@ -48,14 +49,14 @@ const Edit = (props) => {
             data.append('newImg[]', image_file);
         });
         data.append('img', JSON.stringify(images));
-        data.append('category_id', values.category_id);
+        data.append('category_id', values.category_id ?? []);
         data.append('name', values.name);
         data.append('barcode', values.barcode);
         data.append('stock', values.stock);
         data.append('pur_price', values.pur_price);
         data.append('sel_price', values.sel_price);
-        data.append('tax', values.tax);
-        data.append('text', values.text);
+        data.append('tax', values.tax ?? 0);
+        data.append('text', values.text ?? null);
         data.append('property', JSON.stringify(property));
         data.append('_method','put');
 
@@ -98,14 +99,22 @@ const Edit = (props) => {
             const findIndex = defaultImages.findIndex((picture) => picture === item);
             if (findIndex !== -1) {
                 const findIndexImage = images.findIndex((image) => image.image_path === item);
-                console.log(findIndexImage);
                 images[findIndexImage]['isRemove'] = true;
                 setImages([...images]);
             }
         });
     };
 
-    if (loading) return <div>Yuklenir...</div>;
+    if (loading) {
+        return <div className="loader">
+            <Loader
+                type="Puff"
+                color="#00BFFF"
+                height={300}
+                width={300}
+            />
+        </div>
+    }
 
     return (
         <Layout>
@@ -145,7 +154,6 @@ const Edit = (props) => {
                               handleBlur,
                               errors,
                               isValid,
-                              isSubmitting,
                               touched,
                               setFieldValue
                           }) => (
@@ -154,12 +162,12 @@ const Edit = (props) => {
                                     <div className="col-12">
                                         <ImageUploader
                                             withIcon={true}
-                                            buttonText='Choose images'
+                                            defaultImages={defaultImages}
+                                            buttonText='Şəkil seçin'
                                             onChange={(picturesFiles,pictures) => onChange(picturesFiles,pictures)}
                                             imgExtension={['.jpg', '.gif', '.png', '.gif']}
                                             maxFileSize={5242880}
                                             withPreview={true}
-                                            singleImage={true}
                                         />
                                     </div>
                                 </div>
@@ -293,7 +301,7 @@ const Edit = (props) => {
                                 </div>
                                 <button className="w-100 btn btn-lg btn-primary" type="button"
                                         onClick={handleSubmit}
-                                        disabled={!isValid || isSubmitting}
+                                        disabled={!isValid}
                                 >Redaktə et
                                 </button>
                             </div>

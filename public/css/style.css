@@ -52,3 +52,12 @@ body {
         font-size: 3.5rem;
     }
 }
+
+.loader {
+    position:fixed;
+    width: 300px;
+    height: 300px;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -50%);
+}

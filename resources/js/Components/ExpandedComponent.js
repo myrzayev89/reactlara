@@ -1,3 +1,3 @@
 import React from "react";
 
-export default ({product}) => <div>{product.text}</div>;
+export default ({ data = [], field = 'text' }) => <div dangerouslySetInnerHTML={{ __html: data[field] }}/>;

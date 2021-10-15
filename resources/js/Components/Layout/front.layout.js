@@ -3,7 +3,7 @@ import axios from 'axios';
 import { inject, observer } from "mobx-react";
 import { useHistory } from 'react-router-dom';
 import {Navbar, Container, Nav, NavDropdown} from 'react-bootstrap';
-import {Link} from "react-router-dom";
+import {LinkContainer} from "react-router-bootstrap";
 
 const Layout = (props) => {
     const [user, setUser] = useState({});
@@ -45,9 +45,18 @@ const Layout = (props) => {
                     <Navbar.Toggle aria-controls="responsive-navbar-nav" />
                     <Navbar.Collapse id="responsive-navbar-nav">
                         <Nav className="me-auto">
-                            <Nav.Link>
-                                <Link to={'/product'}>Mallar</Link>
-                            </Nav.Link>
+                            <LinkContainer to={'/category'}>
+                                <Nav.Link>Bölmə</Nav.Link>
+                            </LinkContainer>
+                            <LinkContainer to={'/customer'}>
+                                <Nav.Link>Müştəri & Tədarikçi</Nav.Link>
+                            </LinkContainer>
+                            <LinkContainer to={'/product'}>
+                                <Nav.Link>Mal</Nav.Link>
+                            </LinkContainer>
+                            <LinkContainer to={'/stock'}>
+                                <Nav.Link>Stok</Nav.Link>
+                            </LinkContainer>
                         </Nav>
                         <Nav>
                             <NavDropdown title={user.name} id="collasible-nav-dropdown">

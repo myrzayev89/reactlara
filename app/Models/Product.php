@@ -2,10 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 
+/**
+ * Class Product
+ * @package App\Models
+ * @mixin Builder
+ */
 class Product extends Model
 {
     use HasFactory;
@@ -22,21 +29,9 @@ class Product extends Model
         'text',
     ];
 
-    public static function imageUploader(\Illuminate\Http\Request $request, $img = null)
-    {
-        if ($request->hasFile('newImg')) {
-            if ($img) {
-                Storage::delete($img);
-            }
-            $folder = date('Y-m-d');
-            return $request->file('newImg')->store($folder);
-        }
-        return null;
-    }
-
     public function images()
     {
-        return $this->hasOne(ProductImage::class, 'product_id', 'id');
+        return $this->hasMany(ProductImage::class, 'product_id', 'id');
     }
 
     public function properties()

@@ -6,11 +6,13 @@ import DataTable from 'react-data-table-component';
 import HeaderComponent from '../../Components/HeaderComponent';
 import ExpandedComponent from '../../Components/ExpandedComponent';
 import swal from 'sweetalert';
+import Loader from "react-loader-spinner";
 
 const Index = (props) => {
 
     const [product, setProduct] = useState();
     const [refresh, setRefresh] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState({
         filteredData:[],
         text:'',
@@ -24,6 +26,7 @@ const Index = (props) => {
             }
         }).then((res) => {
             setProduct(res.data.product);
+            setLoading(false);
         }).catch(e => console.log(e));
     },[refresh]);
 
@@ -41,7 +44,7 @@ const Index = (props) => {
     ];
     const getFilter = (e) => {
         const filterText = e.target.value;
-        if (filterText != '') {
+        if (filterText !== '') {
             const filteredItems = product.filter((item) => (
                     item.name && item.name.toLowerCase().includes(filterText.toLowerCase()) ||
                     item.barcode && item.barcode.toLowerCase().includes(filterText.toLowerCase())
@@ -86,6 +89,17 @@ const Index = (props) => {
                 }
             })
     };
+
+    if (loading) {
+        return <div className="loader">
+            <Loader
+                type="Puff"
+                color="#00BFFF"
+                height={300}
+                width={300}
+            />
+        </div>
+    }
 
     return (
         <Layout>

@@ -10,11 +10,13 @@ import axios from "axios";
 import ImageUploader from 'react-images-upload';
 import CKEditor from 'ckeditor4-react';
 import swal from 'sweetalert';
+import Loader from "react-loader-spinner";
 
 const Create = (props) => {
     const [categories, setCategories] = useState([]);
     const [images, setImages] = useState([]);
     const [property, setProperty] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         axios.get(`/api/product/create`,{
@@ -23,13 +25,14 @@ const Create = (props) => {
             }
         }).then((res) => {
             setCategories(res.data.categories);
+            setLoading(false);
         }).catch(e => console.log(e));
     },[images]);
 
     const handleSubmit = (values, { resetForm }) => {
         const data = new FormData();
         images.forEach((image_file) => {
-            data.append('img', image_file);
+            data.append('img[]', image_file);
         });
         data.append('category_id', values.category_id ?? []);
         data.append('name', values.name);
@@ -74,6 +77,17 @@ const Create = (props) => {
         property[index][event.target.name] = event.target.value;
         setProperty([...property]);
     };
+
+    if (loading) {
+        return <div className="loader">
+            <Loader
+                type="Puff"
+                color="#00BFFF"
+                height={300}
+                width={300}
+            />
+        </div>
+    }
 
     return (
         <Layout>
@@ -124,7 +138,6 @@ const Create = (props) => {
                                             imgExtension={['.jpg', '.gif', '.png', '.gif']}
                                             maxFileSize={5242880}
                                             withPreview={true}
-                                            singleImage={true}
                                         />
                                     </div>
                                 </div>
